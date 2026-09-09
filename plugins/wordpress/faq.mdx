@@ -1,0 +1,48 @@
+---
+title: "FAQ WordPress"
+description: "Résolvez les problèmes courants du plugin MaishaPay"
+---
+
+<AccordionGroup>
+  <Accordion title="Le moyen de paiement n'apparaît pas à la caisse">
+    Vérifiez que WooCommerce et le plugin MaishaPay sont actifs. Contrôlez aussi que le plugin est
+    activé dans **WooCommerce > Réglages > Paiements** et que la devise de la commande est prise en
+    charge.
+  </Accordion>
+  <Accordion title="La commande reste en attente">
+    Vérifiez que votre boutique est accessible publiquement en HTTPS et que le callback n'est pas
+    bloqué par un pare-feu, une extension de sécurité ou une authentification HTTP. Confirmez aussi
+    le statut avec [Transaction Lookup](/api-reference/transactions/lookuptransaction).
+  </Accordion>
+  <Accordion title="Une transaction Sandbox échoue immédiatement">
+    Vérifiez que le mode Sandbox utilise bien une paire de clés `MP-SBPK-...` et que les paramètres
+    de test correspondent à l'environnement Sandbox. Une clé Live ne fonctionne pas avec ce mode.
+  </Accordion>
+  <Accordion title="Le client a payé, mais la commande n'est pas mise à jour">
+    Recherchez la transaction avec votre référence marchand. Vérifiez ensuite les journaux du
+    plugin et la réponse de votre serveur au callback. Votre endpoint doit répondre avec HTTP `200`.
+    Ne marquez pas manuellement la commande comme payée sans confirmation MaishaPay.
+  </Accordion>
+  <Accordion title="Puis-je utiliser le plugin sans WooCommerce ?">
+    Le plugin décrit ici est conçu pour le checkout WooCommerce. Pour une intégration WordPress
+    personnalisée, utilisez l'API REST ou un SDK côté serveur.
+  </Accordion>
+  <Accordion title="Où trouver mes clés API ?">
+    Les clés sont disponibles dans le [dashboard marchand MaishaPay](https://marchand.maishapay.online).
+    Utilisez des clés Sandbox pour les tests et gardez `secretApiKey` strictement confidentielle.
+  </Accordion>
+  <Accordion title="Comment passer en production ?">
+    Terminez les tests Sandbox, vérifiez les callbacks, sélectionnez Live dans les réglages et
+    remplacez les deux clés par leur paire `MP-LIVEPK-...` correspondante.
+  </Accordion>
+</AccordionGroup>
+
+## Informations à fournir au support
+
+Si le problème persiste, envoyez au support MaishaPay :
+
+- la référence de commande WooCommerce ;
+- l'identifiant de transaction MaishaPay ;
+- l'environnement utilisé, Sandbox ou Live ;
+- la date et l'heure de l'essai ;
+- les extraits pertinents des journaux, sans aucune clé secrète.

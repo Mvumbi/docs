@@ -1,0 +1,72 @@
+---
+title: "Installation WordPress"
+description: "Installez et configurez le plugin MaishaPay pour WooCommerce"
+---
+
+## Prérequis
+
+- WordPress et WooCommerce installés.
+- PHP et WordPress compatibles avec votre version de WooCommerce.
+- Un compte marchand MaishaPay.
+- Une URL HTTPS publique pour votre boutique en production.
+
+## Installer le plugin
+
+Téléchargez le package officiel du plugin depuis le dashboard marchand MaishaPay ou auprès du
+support, puis dans WordPress :
+
+<Steps>
+  <Step title="Ouvrez l'administration WordPress">
+    Connectez-vous à votre tableau de bord WordPress, puis ouvrez **Extensions > Ajouter**.
+  </Step>
+  <Step title="Importez le package">
+    Cliquez sur **Téléverser une extension**, sélectionnez le fichier ZIP fourni par MaishaPay,
+    puis installez-le.
+  </Step>
+  <Step title="Activez l'extension">
+    Activez le plugin après l'installation. WooCommerce doit rester actif pour afficher le moyen de
+    paiement à la caisse.
+  </Step>
+  <Step title="Ouvrez les réglages de paiement">
+    Allez dans **WooCommerce > Réglages > Paiements**, puis sélectionnez MaishaPay.
+  </Step>
+</Steps>
+
+<Note>
+  Le nom exact du fichier ZIP et sa méthode de distribution peuvent varier selon la version du
+  plugin. Utilisez uniquement un package fourni par MaishaPay.
+</Note>
+
+## Configurer l'environnement
+
+Commencez avec les clés Sandbox :
+
+| Réglage | Valeur de test |
+|---|---|
+| Environnement | Sandbox |
+| Clé publique | `MP-SBPK-...` |
+| Clé secrète | `MP-SBPK-...` |
+
+En production, sélectionnez Live et utilisez la paire `MP-LIVEPK-...` correspondante. Ne mélangez
+jamais une clé Sandbox avec l'environnement Live.
+
+## Tester une commande
+
+1. Activez le mode Sandbox.
+2. Créez une commande de test avec une référence unique.
+3. Sélectionnez MaishaPay à la caisse.
+4. Vérifiez que la commande passe par `PENDING`, puis reçoit son statut final.
+5. Consultez les journaux du plugin si le callback ne met pas la commande à jour.
+
+<Warning>
+  Ne désactivez pas la validation HTTPS et ne copiez pas votre clé secrète dans un ticket, un dépôt
+  Git ou un champ accessible aux clients.
+</Warning>
+
+## Passer en production
+
+Avant d'activer Live, vérifiez les URL de callback, le certificat TLS, les devises acceptées et les
+notifications WooCommerce. Effectuez ensuite une transaction réelle de faible montant pour valider
+le parcours complet.
+
+Pour les erreurs fréquentes, consultez la [FAQ WordPress](/plugins/wordpress/faq).

@@ -1,0 +1,42 @@
+---
+title: "Plugin WordPress"
+description: "Acceptez les paiements MaishaPay sur votre boutique WordPress"
+---
+
+Le plugin MaishaPay permet d'ajouter le paiement Mobile Money et le paiement par carte à une
+boutique WordPress équipée de WooCommerce.
+
+## Fonctionnalités
+
+- Paiement Mobile Money avec les opérateurs disponibles pour votre compte marchand.
+- Paiement par carte via la page hébergée MaishaPay.
+- Séparation des environnements Sandbox et Live.
+- Mise à jour automatique du statut de commande après le callback MaishaPay.
+- Journalisation des références de transaction pour faciliter le rapprochement.
+
+## Comment fonctionne un paiement
+
+1. Le client choisit MaishaPay à la caisse.
+2. WooCommerce transmet la commande à MaishaPay.
+3. Le client valide son paiement Mobile Money ou est redirigé vers la page carte.
+4. MaishaPay notifie votre boutique du résultat final.
+5. Le plugin met à jour le statut de la commande.
+
+<Info>
+  Une réponse initiale `PENDING` ne signifie pas que le paiement est terminé. Le statut final est
+  confirmé par notification ou par vérification de transaction.
+</Info>
+
+## Conditions requises
+
+- WordPress à jour.
+- WooCommerce installé et activé.
+- Une boutique accessible en HTTPS en production.
+- Un compte marchand MaishaPay et des clés API.
+
+## Commencer
+
+Installez le plugin depuis la page [Installation WordPress](/plugins/wordpress/installation), puis
+configurez vos clés dans les réglages WooCommerce.
+
+Pour comprendre les callbacks et les statuts, consultez [Callbacks et notifications](/concepts/callbacks-notifications).
