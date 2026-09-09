@@ -1,0 +1,36 @@
+---
+title: "Installation"
+description: "Installer le SDK Flutter MaishaPay"
+---
+
+Le SDK Flutter permet d'intégrer les paiements Mobile Money et carte dans vos applications
+mobiles cross-platform. Compatible Android et iOS.
+
+## Installer le package
+
+Ajoutez `maisha_pay_flutter` à votre `pubspec.yaml` :
+
+```yaml pubspec.yaml
+dependencies:
+  maisha_pay_flutter: ^2.1.0
+```
+
+Puis récupérez le package :
+
+```bash
+flutter pub get
+```
+
+Le package est publié sur [pub.dev](https://pub.dev).
+
+## Récupérer vos clés API
+
+Comme pour l'API REST, vous aurez besoin de vos clés API depuis le
+[dashboard marchand MaishaPay](https://marchand.maishapay.online). Voir
+[Authentification](/authentification) pour le détail des environnements Sandbox/Live.
+
+## Étape suivante
+
+<Card title="Démarrage rapide" icon="rocket" href="/sdks/flutter/quickstart">
+  Initialisez le client et effectuez votre première transaction.
+</Card>

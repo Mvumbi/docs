@@ -1,0 +1,75 @@
+---
+title: "Démarrage rapide"
+description: "Effectuez votre première transaction avec le SDK Flutter"
+---
+
+<Steps>
+  <Step title="Importez le SDK">
+    ```dart
+    import 'package:maisha_pay_flutter/maisha_pay_flutter.dart';
+    ```
+  </Step>
+
+  <Step title="Initialisez le client">
+    ```dart
+    final pay = MaishaPay(
+      apiKey: 'mp_live_xxxxxxxx',
+      environment: Environment.sandbox,
+    );
+    ```
+
+    <Note>
+      Utilisez `Environment.sandbox` pour tester, `Environment.live` pour la production.
+    </Note>
+  </Step>
+
+  <Step title="Initiez une collecte Mobile Money">
+    ```dart
+    final result = await pay.initiateMobileMoney(
+      amount: 500000,
+      currency: 'CDF',
+      phone: '+243812345678',
+      operator: 'mpesa',
+      reference: 'ORDER-001',
+    );
+    ```
+  </Step>
+
+  <Step title="Vérifiez le statut de la transaction">
+    ```dart
+    final status = await pay.checkTransaction(
+      reference: 'ORDER-001',
+    );
+    ```
+  </Step>
+</Steps>
+
+## Exemple complet
+
+```dart
+import 'package:maisha_pay_flutter/maisha_pay_flutter.dart';
+
+final pay = MaishaPay(
+  apiKey: 'mp_live_xxxxxxxx',
+  environment: Environment.sandbox,
+);
+
+Future<void> payerAvecMobileMoney() async {
+  final result = await pay.initiateMobileMoney(
+    amount: 500000,
+    currency: 'CDF',
+    phone: '+243812345678',
+    operator: 'mpesa',
+    reference: 'ORDER-001',
+  );
+
+  // Gérez le résultat selon votre UI (affichage d'un état "en attente",
+  // navigation, etc.)
+}
+```
+
+## Étape suivante
+
+<Card title="Référence des méthodes" icon="book" href="/sdks/flutter/reference">
+  Découvrez toutes les méthodes disponibles du SDK Flutter.
+</Card>

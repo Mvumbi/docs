@@ -1,0 +1,104 @@
+---
+title: "Référence"
+description: "Méthodes disponibles dans le SDK Flutter"
+---
+
+## Méthodes disponibles
+
+| Méthode | Description | Endpoint REST équivalent |
+|---|---|---|
+| `initiateMobileMoney()` | Déclenche une collecte Mobile Money | [Collection Mobile Money](/api-reference/collection/collectmobilemoney) |
+| `initiateCardPayment()` | Initie un paiement par carte | [Collection Carte](/api-reference/collection/collectcard) |
+| `checkTransaction()` | Vérifie le statut d'une transaction | [Transaction Lookup](/api-reference/transactions/lookuptransaction) |
+| `initiateB2CTransfer()` | Effectue un transfert B2C | [Transfert B2C Mobile Money](/api-reference/transferts-b2c/b2ctransfermobilemoney) |
+
+<Warning>
+  Cette page reflète les méthodes confirmées dans la documentation source du SDK. Les signatures
+  exactes (paramètres optionnels, types de retour, gestion des erreurs) doivent être vérifiées
+  contre le code source ou le CHANGELOG du package `maisha_pay_flutter` avant publication finale.
+</Warning>
+
+## `initiateMobileMoney()`
+
+Déclenche une collecte de paiement via un opérateur Mobile Money.
+
+```dart
+final result = await pay.initiateMobileMoney(
+  amount: 500000,
+  currency: 'CDF',
+  phone: '+243812345678',
+  operator: 'mpesa',
+  reference: 'ORDER-001',
+);
+```
+
+| Paramètre | Type | Requis | Description |
+|---|---|---|---|
+| `amount` | `int` | Oui | Montant de la transaction. |
+| `currency` | `String` | Oui | Devise (ex. `CDF`, `USD`). |
+| `phone` | `String` | Oui | Numéro de téléphone du client, format international. |
+| `operator` | `String` | Oui | Opérateur Mobile Money (ex. `mpesa`, `airtel`, `orange`). |
+| `reference` | `String` | Oui | Référence unique de transaction. |
+
+## `initiateCardPayment()`
+
+Initie un paiement par carte bancaire. Redirige généralement vers une vue web/WebView hébergée par
+CyberSource pour la saisie sécurisée des informations de carte.
+
+```dart
+final result = await pay.initiateCardPayment(
+  amount: 25,
+  currency: 'USD',
+  reference: 'ORDER-002',
+  // Voir la Collection Carte REST pour les champs de facturation complets
+  // (customerFirstname, customerLastname, customerAddress, customerCity, etc.)
+);
+```
+
+<Note>
+  Les paramètres exacts de facturation attendus par cette méthode ne sont pas détaillés dans la
+  documentation source — vérifiez auprès de l'équipe SDK ou dans le code du package.
+</Note>
+
+## `checkTransaction()`
+
+Vérifie le statut actuel d'une transaction, par référence ou par ID MaishaPay.
+
+```dart
+final status = await pay.checkTransaction(
+  reference: 'ORDER-001',
+);
+```
+
+## `initiateB2CTransfer()`
+
+Transfère des fonds vers un compte Mobile Money bénéficiaire.
+
+```dart
+final result = await pay.initiateB2CTransfer(
+  amount: 20000,
+  currency: 'CDF',
+  phone: '+24381XXXXXXX',
+  operator: 'mpesa',
+  reference: 'XXXX',
+  motif: 'Transfert vers Momo',
+);
+```
+
+| Paramètre | Type | Requis | Description |
+|---|---|---|---|
+| `amount` | `int` | Oui | Montant à transférer. |
+| `currency` | `String` | Oui | Devise. |
+| `phone` | `String` | Oui | Numéro du bénéficiaire, format international. |
+| `operator` | `String` | Oui | Opérateur Mobile Money du bénéficiaire. |
+| `reference` | `String` | Oui | Référence unique de transaction. |
+| `motif` | `String` | Non | Raison du transfert. |
+
+## Gestion des erreurs
+
+<Info>
+  La gestion des exceptions (types d'erreurs Dart levées par le SDK) n'est pas détaillée dans la
+  documentation source actuelle. À documenter une fois confirmée — voir
+  [Codes d'erreur communs](/concepts/codes-erreur) pour les statuts au niveau API REST en
+  attendant.
+</Info>

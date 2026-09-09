@@ -1,0 +1,60 @@
+---
+title: "Référence"
+description: "Méthodes disponibles dans le SDK JavaScript"
+---
+
+## Méthodes disponibles
+
+| Méthode | Description |
+|---|---|
+| `openHostedCheckout()` | Ouvre le formulaire de paiement hébergé par MaishaPay (carte). |
+
+<Warning>
+  La documentation source ne détaille qu'une seule méthode (`openHostedCheckout()`), dédiée au
+  paiement par carte via un formulaire hébergé. Contrairement au SDK Flutter, il n'est pas
+  confirmé que ce SDK expose des méthodes dédiées pour la collecte Mobile Money, le transfert
+  B2C, ou la vérification de statut. Si ces méthodes existent, ajoutez-les ici — sinon,
+  utilisez l'[API REST](/api-reference) directement depuis votre backend pour ces cas d'usage.
+</Warning>
+
+## `openHostedCheckout()`
+
+Ouvre une page de paiement hébergée par MaishaPay où le client saisit ses informations de carte
+en toute sécurité, sans que celles-ci ne transitent par votre serveur.
+
+```javascript
+pay.openHostedCheckout({
+  amount: 2500,
+  currency: 'USD',
+  reference: 'ORDER-001',
+  returnUrl: 'https://app.example.com/success',
+});
+```
+
+| Paramètre | Type | Requis | Description |
+|---|---|---|---|
+| `amount` | `number` | Oui | Montant de la transaction. |
+| `currency` | `string` | Oui | Devise (ex. `USD`, `CDF`). |
+| `reference` | `string` | Oui | Référence unique de transaction. |
+| `returnUrl` | `string` | Oui | URL vers laquelle le client est redirigé après paiement. |
+
+## Vérifier le statut après redirection
+
+Une fois le client redirigé vers `returnUrl`, confirmez le résultat de la transaction depuis votre
+backend via [Transaction Lookup](/api-reference/transactions/lookuptransaction) plutôt que de vous
+fier uniquement aux paramètres d'URL — voir
+[Callbacks et notifications](/concepts/callbacks-notifications) pour les raisons de cette
+recommandation.
+
+## Configuration du client
+
+| Option | Type | Requis | Description |
+|---|---|---|---|
+| `apiKey` | `string` | Oui | Clé API publique (`pk_live_...` ou `pk_test_...`). |
+| `env` | `string` | Oui | `'sandbox'` ou `'live'`. |
+
+<Info>
+  Pour la collecte Mobile Money ou les transferts B2C depuis une application web, appelez l'API
+  REST directement depuis votre backend (ces opérations nécessitent `secretApiKey`, qui ne doit
+  jamais être exposée côté navigateur).
+</Info>

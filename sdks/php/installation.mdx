@@ -1,0 +1,32 @@
+---
+title: "Installation"
+description: "Installer le SDK PHP MaishaPay"
+---
+
+Le SDK PHP est idéal pour les applications Symfony, Laravel ou tout projet PHP. Il encapsule la
+logique de l'API REST derrière une interface orientée objet avec un builder fluide.
+
+## Installer le package
+
+```bash
+composer require maisha-pay/maisha-pay-php:^2.1
+```
+
+Le package est publié sur [Packagist](https://packagist.org).
+
+## Récupérer vos clés API
+
+Comme pour l'API REST, vous aurez besoin de vos clés API depuis le
+[dashboard marchand MaishaPay](https://marchand.maishapay.online). Voir
+[Authentification](/authentification) pour le détail des environnements Sandbox/Live.
+
+<Warning>
+  Ce SDK utilise `apiKey` et `secretKey` comme deux paramètres distincts du constructeur —
+  n'exécutez ce code que côté serveur, jamais dans du code exposé publiquement.
+</Warning>
+
+## Étape suivante
+
+<Card title="Démarrage rapide" icon="rocket" href="/sdks/php/quickstart">
+  Initialisez le client et effectuez votre première transaction.
+</Card>

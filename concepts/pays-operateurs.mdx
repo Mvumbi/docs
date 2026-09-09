@@ -1,0 +1,89 @@
+---
+title: "Pays et opérateurs supportés"
+description: "Couverture géographique par service MaishaPay"
+---
+
+La couverture géographique de MaishaPay varie selon le service utilisé. Cette page recense les
+pays et opérateurs supportés pour chaque module.
+
+## Mobile Money (Collection)
+
+<AccordionGroup>
+  <Accordion title="République Démocratique du Congo (RDC)">
+    M-Pesa, Airtel Money, Orange Money
+  </Accordion>
+  <Accordion title="République du Congo (Congo-Brazzaville)">
+    Airtel Money, MTN
+  </Accordion>
+  <Accordion title="Cameroun">
+    MTN, Orange Money
+  </Accordion>
+  <Accordion title="Sénégal">
+    Orange Money, Free Money, Expresso, Wave, Wizall
+  </Accordion>
+  <Accordion title="Côte d'Ivoire">
+    Orange Money, MTN, Moov, Wave
+  </Accordion>
+  <Accordion title="Bénin">
+    Moov, MTN
+  </Accordion>
+  <Accordion title="Burkina Faso">
+    Orange Money, Moov
+  </Accordion>
+  <Accordion title="Togo">
+    T-Money, Moov Togo
+  </Accordion>
+  <Accordion title="Mali">
+    Orange Money, Moov
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  MaishaPay prévoit d'étendre sa couverture Mobile Money au Ghana, au Nigeria, à l'Égypte et
+  d'autres pays. Consultez votre dashboard marchand pour la liste à jour des opérateurs
+  disponibles pour votre compte.
+</Note>
+
+## Cartes bancaires (Collection)
+
+Les paiements par carte (Visa, Mastercard, American Express) sont traités via CyberSource (Visa)
+et disponibles indépendamment de la couverture Mobile Money, partout où CyberSource opère.
+
+## Transferts B2C
+
+Les transferts vers Mobile Money sont disponibles dans les mêmes pays que la collecte Mobile
+Money : RDC, Congo-Brazzaville, Cameroun, Sénégal, Côte d'Ivoire, Bénin, Togo, Mali et Burkina
+Faso.
+
+## Recharge mobile et data (Airtime)
+
+Le service de recharge de crédit téléphonique et de vente de data est disponible dans **plus de 75
+pays**. Utilisez l'endpoint
+[Lister les opérateurs de recharge](/api-reference/airtime/listairtimeoperators) avec le code ISO
+à deux lettres du pays concerné pour connaître les opérateurs disponibles localement.
+
+## Abonnements TV (PayTV)
+
+<Warning>
+  Le service PayTV est actuellement disponible **uniquement en République Démocratique du
+  Congo**.
+</Warning>
+
+| Opérateur | Devises supportées | Statut |
+|---|---|---|
+| Canal+ RDC | CDF, USD | Actif |
+| Easy TV | CDF, USD | Actif |
+| StarTimes RDC | CDF | Actif |
+| DSTV | CDF, USD | Actif |
+
+Utilisez l'endpoint [Lister les opérateurs TV](/api-reference/paytv/listtvoperators) pour obtenir
+la liste à jour avec logos et devises supportées.
+
+## Résumé par service
+
+| Service | Couverture |
+|---|---|
+| Mobile Money (Collection & Transfert) | 9 pays d'Afrique centrale et de l'Ouest |
+| Carte bancaire | Selon la couverture CyberSource |
+| Recharge mobile / data | 75+ pays |
+| Abonnements TV | RDC uniquement |

@@ -1,0 +1,90 @@
+---
+title: "Référence"
+description: "Méthodes et builders disponibles dans le SDK PHP"
+---
+
+Le SDK PHP expose une interface de type **builder fluide** : vous chaînez des méthodes pour
+construire votre transaction, puis appelez `->execute()` pour l'envoyer.
+
+<Warning>
+  Seul le flux Mobile Money est détaillé dans la documentation source du SDK. Les builders
+  équivalents pour la collecte carte, le transfert B2C et le lookup de transaction sont déduits
+  par cohérence avec l'API REST, mais **restent à confirmer** contre le code réel du package
+  avant publication finale.
+</Warning>
+
+## Initialisation du client
+
+```php
+use MaishaPay\MaishaPay;
+
+$pay = new MaishaPay(
+  apiKey: 'mp_live_xxxxxxxx',
+  secretKey: 'ms_live_xxxxxxxx',
+  environment: Environment::SANDBOX,
+);
+```
+
+| Paramètre | Type | Requis | Description |
+|---|---|---|---|
+| `apiKey` | `string` | Oui | Clé API publique. |
+| `secretKey` | `string` | Oui | Clé API secrète. |
+| `environment` | `Environment` | Oui | `Environment::SANDBOX` ou `Environment::LIVE`. |
+
+## `mobileMoney()`
+
+Construit et exécute une collecte Mobile Money.
+
+```php
+$transaction = $pay->mobileMoney()
+  ->amount(500000)
+  ->currency('CDF')
+  ->phone('+243812345678')
+  ->operator('mpesa')
+  ->reference('ORDER-001')
+  ->execute();
+```
+
+| Méthode du builder | Type | Requis | Description |
+|---|---|---|---|
+| `->amount()` | `int\|float` | Oui | Montant de la transaction. |
+| `->currency()` | `string` | Oui | Devise (ex. `CDF`, `USD`). |
+| `->phone()` | `string` | Oui | Numéro de téléphone du client. |
+| `->operator()` | `string` | Oui | Opérateur Mobile Money. |
+| `->reference()` | `string` | Oui | Référence unique de transaction. |
+| `->execute()` | — | Oui | Envoie la requête et retourne le résultat. |
+
+<Info>
+  Correspond à l'endpoint REST
+  [Collection Mobile Money](/api-reference/collection/collectmobilemoney).
+</Info>
+
+## Autres builders (à confirmer)
+
+Par cohérence avec les autres SDK et l'API REST, ces builders sont vraisemblablement disponibles
+mais n'ont pas été confirmés dans la documentation source :
+
+<AccordionGroup>
+  <Accordion title="Collecte carte">
+    Probablement `$pay->card()->amount()->currency()->...->execute()`, correspondant à
+    [Collection Carte](/api-reference/collection/collectcard).
+  </Accordion>
+  <Accordion title="Transfert B2C">
+    Probablement `$pay->transfer()->amount()->currency()->phone()->operator()->motif()->execute()`,
+    correspondant à
+    [Transfert B2C Mobile Money](/api-reference/transferts-b2c/b2ctransfermobilemoney).
+  </Accordion>
+  <Accordion title="Vérification de transaction">
+    Probablement `$pay->transaction()->find($reference)` ou équivalent, correspondant à
+    [Transaction Lookup](/api-reference/transactions/lookuptransaction).
+  </Accordion>
+</AccordionGroup>
+
+## Gestion des erreurs
+
+<Info>
+  Le type d'exceptions levées par le SDK en cas d'échec (ex. `MaishaPayException`) n'est pas
+  documenté dans la source actuelle. À confirmer et compléter — voir
+  [Codes d'erreur communs](/concepts/codes-erreur) pour les statuts au niveau API REST en
+  attendant.
+</Info>

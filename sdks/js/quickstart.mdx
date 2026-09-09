@@ -1,0 +1,72 @@
+---
+title: "Démarrage rapide"
+description: "Affichez votre premier paiement avec le SDK JavaScript"
+---
+
+<Steps>
+  <Step title="Importez le SDK">
+    ```javascript
+    import { MaishaPay } from '@maisha-pay/js-sdk';
+    ```
+  </Step>
+
+  <Step title="Initialisez le client">
+    ```javascript
+    const pay = new MaishaPay({
+      apiKey: 'pk_live_xxxxxxxx',
+      env: 'sandbox',
+    });
+    ```
+
+    <Note>
+      Utilisez `env: 'sandbox'` pour tester, `env: 'live'` pour la production.
+    </Note>
+  </Step>
+
+  <Step title="Déclenchez le checkout hébergé">
+    ```javascript
+    pay.openHostedCheckout({
+      amount: 2500,
+      currency: 'USD',
+      reference: 'ORDER-001',
+      returnUrl: 'https://app.example.com/success',
+    });
+    ```
+  </Step>
+</Steps>
+
+## Exemple complet (React)
+
+```jsx
+import { MaishaPay } from '@maisha-pay/js-sdk';
+
+function Checkout() {
+  const pay = new MaishaPay({
+    apiKey: 'pk_live_xxxxxxxx',
+    env: 'sandbox',
+  });
+
+  return (
+    <button onClick={() => pay.openHostedCheckout({
+      amount: 2500,
+      currency: 'USD',
+      reference: 'ORDER-001',
+      returnUrl: 'https://app.example.com/success',
+    })}>
+      Payer
+    </button>
+  );
+}
+```
+
+<Info>
+  Ce flux utilise le **checkout hébergé** de MaishaPay : le client est redirigé vers une page de
+  paiement sécurisée hébergée par MaishaPay, puis renvoyé vers `returnUrl` une fois le paiement
+  finalisé. C'est la méthode recommandée pour les paiements par carte.
+</Info>
+
+## Étape suivante
+
+<Card title="Référence des méthodes" icon="book" href="/sdks/js/reference">
+  Découvrez toutes les options disponibles du SDK JavaScript.
+</Card>

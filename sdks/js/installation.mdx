@@ -1,0 +1,37 @@
+---
+title: "Installation"
+description: "Installer le SDK JavaScript MaishaPay"
+---
+
+Le SDK JavaScript permet d'intégrer les paiements dans vos applications web React, Vue ou vanilla
+JS. Il inclut un formulaire de paiement carte embarqué et sécurisé.
+
+<Info>
+  Le formulaire de carte est hébergé côté MaishaPay — vos serveurs ne manipulent jamais les
+  données de carte de vos clients (PCI-DSS simplifié pour votre application).
+</Info>
+
+## Installer le package
+
+```bash npm
+npm install @maisha-pay/js-sdk
+```
+
+Le package est publié sur [npm](https://www.npmjs.com).
+
+## Récupérer vos clés API
+
+Comme pour l'API REST, vous aurez besoin de vos clés API depuis le
+[dashboard marchand MaishaPay](https://marchand.maishapay.online). Voir
+[Authentification](/authentification) pour le détail des environnements Sandbox/Live.
+
+<Warning>
+  Pour ce SDK, seule la clé publique (`apiKey`, préfixe `pk_...`) est utilisée côté client. Ne
+  jamais inclure votre `secretApiKey` dans du code JavaScript exécuté dans le navigateur.
+</Warning>
+
+## Étape suivante
+
+<Card title="Démarrage rapide" icon="rocket" href="/sdks/js/quickstart">
+  Affichez votre premier bouton de paiement.
+</Card>

@@ -1,0 +1,101 @@
+---
+title: "Callbacks et notifications"
+description: "Comment MaishaPay notifie votre application du statut final d'une transaction"
+---
+
+Plusieurs modules de l'API sont **asynchrones** : la réponse immédiate à votre requête indique
+seulement qu'une transaction a été *initiée*, pas son résultat final. Le statut définitif est
+envoyé séparément à l'URL que vous fournissez dans `callbackUrl`.
+
+<Warning>
+  Le comportement du callback (méthode HTTP, format, moment d'envoi) **diffère selon le module**.
+  Vérifiez le tableau ci-dessous avant d'implémenter votre endpoint de réception.
+</Warning>
+
+## Comportement par module
+
+| Module | Réponse immédiate | Notification finale | Méthode du callback |
+|---|---|---|---|
+| Collection Mobile Money | `202 PENDING` | Après validation PIN par le client | **POST**, corps JSON |
+| Collection Carte | `202 PENDING` + `paymentPage` | Après finalisation sur CyberSource | **GET**, paramètres en query string |
+| Transferts B2C Mobile Money | Statut final directement (`SUCCESS`/`FAILED`) | Notification redondante immédiate | **POST**, corps JSON |
+| PayTV (souscription) | ⚠️ À confirmer | ⚠️ À confirmer | ⚠️ À confirmer |
+| Airtime (achat crédit) | ⚠️ À confirmer | ⚠️ À confirmer | ⚠️ À confirmer |
+
+## Collection Mobile Money — notification POST
+
+Une fois que le client valide la transaction avec son code PIN, MaishaPay envoie une requête
+**POST** vers votre `callbackUrl` avec le même format que la réponse initiale, mais un
+`transactionStatus` final :
+
+```json
+{
+  "status_code": 200,
+  "transactionStatus": "SUCCESS",
+  "transactionId": 12345,
+  "originatingTransactionId": "XXXX",
+  "order": { "...": "..." },
+  "paymentChannel": { "...": "..." },
+  "created_at": "14-01-2025 12:27",
+  "updated_at": "14-01-2025 12:57"
+}
+```
+
+<Note>
+  Il est rare, mais possible, qu'une transaction reste en `PENDING` de façon prolongée en raison
+  d'un délai côté opérateur. Si le client a été débité malgré tout, demandez-lui une preuve (ex.
+  capture d'écran) pour vérification auprès de l'opérateur.
+</Note>
+
+## Collection Carte — notification GET
+
+Contrairement aux autres modules, le callback carte est une requête **GET** avec les informations
+en paramètres de l'URL :
+
+```
+https://votre-domaine.com/callback?status=200&description=APPROVED&transactionRefId=XXXX&operatorRefId=1234
+```
+
+| Paramètre | Description |
+|---|---|
+| `status` | `200` (approuvé) ou `400` (refusé/annulé). |
+| `description` | `APPROVED`, `DECLINED`, ou `CANCELED`. |
+| `transactionRefId` | Votre référence, envoyée dans `transactionReference`. |
+| `operatorRefId` | L'identifiant de transaction côté MaishaPay. |
+
+<Warning>
+  Les notifications GET peuvent être altérées en transit plus facilement qu'un POST avec corps
+  JSON. MaishaPay recommande fortement de **confirmer systématiquement le statut** via
+  [Transaction Lookup](/api-reference/transactions/lookuptransaction) plutôt que de faire
+  confiance uniquement à cette notification.
+</Warning>
+
+## Transferts B2C — notification redondante
+
+Pour les transferts B2C, vous recevez le statut final **directement dans la réponse HTTP** de la
+requête initiale. MaishaPay envoie tout de même une notification POST équivalente à
+`callbackUrl`, à titre de confirmation redondante — utile si votre processus de traitement de la
+réponse HTTP initiale échoue pour une raison quelconque.
+
+## Bonnes pratiques
+
+<AccordionGroup>
+  <Accordion title="Toujours répondre 200 à la notification">
+    Votre endpoint de callback doit répondre avec un code `200` pour accuser réception. Une
+    absence de réponse peut déclencher des tentatives de renvoi selon la configuration de
+    MaishaPay.
+  </Accordion>
+  <Accordion title="Traiter les notifications de façon idempotente">
+    Une même notification peut théoriquement être envoyée plusieurs fois. Utilisez
+    `transactionId` ou `originatingTransactionId` pour éviter de traiter deux fois le même
+    événement.
+  </Accordion>
+  <Accordion title="Sécuriser l'endpoint de callback">
+    Utilisez HTTPS (obligatoire pour la collecte carte), et validez si possible l'origine de la
+    requête pour limiter les risques de notifications frauduleuses.
+  </Accordion>
+  <Accordion title="Ne pas bloquer sur le callback seul">
+    Pour la collecte carte notamment, préférez confirmer le statut final via un appel actif à
+    Transaction Lookup plutôt que de dépendre uniquement de la réception du callback GET.
+  </Accordion>
+</AccordionGroup>

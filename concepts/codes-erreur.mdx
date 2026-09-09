@@ -1,0 +1,79 @@
+---
+title: "Codes d'erreur communs"
+description: "Comprendre les statuts et codes retournés par l'API MaishaPay"
+---
+
+L'API MaishaPay utilise deux champs combinés pour indiquer le résultat d'une requête :
+`status_code` (un code numérique, proche des codes HTTP) et `transactionStatus` (un statut
+métier lisible).
+
+<Info>
+  Cette page recense les statuts observés dans la documentation source. Certains cas d'erreur
+  détaillés (codes spécifiques par opérateur, messages d'erreur exacts) restent à documenter —
+  voir la section [À compléter](#%C3%A0-compl%C3%A9ter) en bas de page.
+</Info>
+
+## Valeurs de `status_code`
+
+| Code | Signification | Contexte |
+|---|---|---|
+| `200` | Succès | Transaction traitée avec succès, ou lecture réussie (GET). |
+| `202` | Accepté, en attente | Transaction initiée, en attente de validation (Mobile Money, Carte). |
+| `400` | Échec | Transaction refusée, annulée, ou erreur de validation. |
+
+## Valeurs de `transactionStatus`
+
+| Statut | Signification |
+|---|---|
+| `PENDING` | La transaction a été initiée et transmise à l'opérateur, mais n'est pas encore finalisée. |
+| `SUCCESS` | La transaction a été validée et les fonds ont été débités/crédités avec succès. |
+| `FAILED` | La transaction n'a pas abouti. Aucun fonds n'a été débité côté client. |
+
+### Causes fréquentes d'un statut `FAILED`
+
+<AccordionGroup>
+  <Accordion title="Collecte Mobile Money">
+    - Le client n'a pas validé la transaction (pas de saisie du code PIN).
+    - Fonds insuffisants sur le compte Mobile Money du client.
+    - Incident technique temporaire côté opérateur.
+  </Accordion>
+  <Accordion title="Collecte Carte">
+    - Carte invalide ou refusée par l'émetteur.
+    - Fonds insuffisants.
+    - Abandon du client pendant le processus de paiement (`description: "CANCELED"`).
+  </Accordion>
+  <Accordion title="Transfert B2C">
+    - Numéro de téléphone bénéficiaire incorrect.
+    - Compte bénéficiaire introuvable ou non éligible.
+    - Incident technique côté opérateur.
+  </Accordion>
+</AccordionGroup>
+
+## Statut `PENDING` prolongé
+
+Dans de rares cas, une transaction Mobile Money peut rester en `PENDING` plus longtemps que prévu
+en raison d'un délai de traitement de l'opérateur. Dans ce cas :
+
+1. Si le client indique avoir été débité, demandez une preuve (capture d'écran du SMS de
+   confirmation, par exemple).
+2. Utilisez [Transaction Lookup](/api-reference/transactions/lookuptransaction) pour vérifier le
+   statut actuel plutôt que de vous fier uniquement au dernier callback reçu.
+3. Le statut final sera mis à jour et notifié dès que l'opérateur confirme.
+
+## Vérifier le statut réel d'une transaction
+
+Quel que soit le module, l'endpoint
+[Transaction Lookup](/api-reference/transactions/lookuptransaction) reste la source de vérité la
+plus fiable — recommandé en particulier après une notification GET (collecte carte) ou en cas de
+doute sur un callback non reçu.
+
+## À compléter
+
+Les éléments suivants ne sont pas encore documentés et nécessitent une vérification en Sandbox
+avant publication finale :
+
+- Codes d'erreur détaillés retournés par le module Airtime (`/airtime/store` et endpoints de
+  découverte d'opérateurs).
+- Structure de réponse d'erreur pour `/paytv/store`.
+- Liste exhaustive des messages d'erreur de validation (ex. montant invalide, devise non
+  supportée, clé API invalide) et leur `status_code` associé.

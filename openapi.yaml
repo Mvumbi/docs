@@ -1,0 +1,1285 @@
+openapi: 3.1.0
+info:
+  title: MaishaPay REST API
+  version: "1.0.0"
+  description: |
+    MaishaPay REST API permet aux marchands et développeurs d'intégrer la collecte de paiements
+    (Mobile Money, carte bancaire), les transferts B2C, la recharge de crédit téléphonique/data,
+    et le paiement d'abonnements TV dans leurs applications.
+
+    ## Authentification
+
+    Toutes les requêtes nécessitent `publicApiKey` et `secretApiKey`, envoyées **dans le corps
+    de la requête** (et non en en-tête HTTP). Récupérez vos clés depuis le
+    [dashboard marchand MaishaPay](https://marchand.maishapay.online).
+
+    Utilisez `gatewayMode` pour basculer entre environnement de test et production :
+    - `0` : Sandbox
+    - `1` : Live (production)
+  contact:
+    name: Support MaishaPay
+    email: support@maishapay.online
+    url: https://www.maishapay.online
+servers:
+  - url: https://marchand.maishapay.online/api
+    description: Production / Sandbox (selon gatewayMode)
+
+tags:
+  - name: Collection
+    description: Encaissement de paiements via Mobile Money ou carte bancaire
+  - name: Transactions
+    description: Recherche et vérification du statut d'une transaction
+  - name: Transferts B2C
+    description: Transferts directs vers des comptes Mobile Money
+  - name: Solde
+    description: Consultation des soldes disponibles par service
+  - name: PayTV
+    description: Paiement d'abonnements TV (RDC uniquement)
+  - name: Airtime
+    description: Recharge de crédit téléphonique et data
+
+paths:
+  /collect/v2/store/mobileMoney:
+    post:
+      operationId: collectMobileMoney
+      tags: [Collection]
+      summary: Initier une collecte Mobile Money
+      description: |
+        Initie une transaction de collecte via un opérateur Mobile Money (Airtel Money, Orange
+        Money, M-Pesa, MTN, etc.). La réponse initiale est asynchrone (`PENDING`) : le statut
+        final est envoyé via une requête POST vers `callbackUrl` une fois que le client a validé
+        la transaction avec son code PIN.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MobileMoneyCollectionRequest"
+            examples:
+              default:
+                value:
+                  transactionReference: "XXXX"
+                  gatewayMode: "1"
+                  publicApiKey: "MP-LIVEPK-kK6yCY09V1jxxxxxxxxxx"
+                  secretApiKey: "MP-LIVEPK-TpJWW05QUGxxxxxxxxxx"
+                  order:
+                    amount: "1000000"
+                    currency: "CDF"
+                    customerFullName: "Jacques Mvumbi"
+                    customerEmailAdress: "jacquesmvumbi@maishapay.online"
+                  paymentChannel:
+                    channel: "MOBILEMONEY"
+                    provider: "AIRTEL"
+                    walletID: "+24399XXXXXXX"
+                    callbackUrl: "https://your_domaine.com/mobile_calback"
+      responses:
+        "202":
+          description: Transaction initiée, en attente de validation par l'opérateur.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MobileMoneyCollectionResponse"
+              examples:
+                pending:
+                  value:
+                    status_code: 202
+                    transactionStatus: "PENDING"
+                    transactionId: 12345
+                    originatingTransactionId: "XXXX"
+                    order:
+                      customerFullName: "Jacques Mvumbi"
+                      customerEmailAdress: "jacquesmvumbi@maishapay.online"
+                      cost:
+                        amount: 100
+                        frais: 4
+                        total: 104
+                        currency: "CDF"
+                    paymentChannel:
+                      channel: "MOBILEMONEY"
+                      provider:
+                        libelle: "AIRTEL"
+                        picture: "service-logos/airtelmoney.png"
+                      walletID: "+243997447204"
+                    created_at: "14-01-2025 12:27"
+                    updated_at: "14-01-2025 12:27"
+      x-codeSamples:
+        - lang: "bash"
+          label: "cURL"
+          source: |
+            curl --location 'https://marchand.maishapay.online/api/collect/v2/store/mobileMoney' \
+            --data-raw '{
+                "transactionReference": "XXXX",
+                "gatewayMode": "1",
+                "publicApiKey": "MP-LIVEPK-kK6yCY09V1jxxxxxxxxxx",
+                "secretApiKey": "MP-LIVEPK-TpJWW05QUGxxxxxxxxxx",
+                "order": {
+                    "amount": "1000000",
+                    "currency": "CDF",
+                    "customerFullName": "Jacques Mvumbi",
+                    "customerEmailAdress": "jacquesmvumbi@maishapay.online"
+                },
+                "paymentChannel": {
+                    "channel": "MOBILEMONEY",
+                    "provider": "AIRTEL",
+                    "walletID": "+24399XXXXXXX",
+                    "callbackUrl": "https://your_domaine.com/mobile_calback"
+                }
+            }'
+        - lang: "javascript"
+          label: "JavaScript SDK"
+          source: |
+            import { MaishaPay } from '@maisha-pay/js-sdk';
+
+            const pay = new MaishaPay({ apiKey: 'pk_live_xxxxxxxx', env: 'sandbox' });
+            // Voir le SDK JS pour le flux de paiement carte hébergé.
+            // Pour Mobile Money, utilisez directement l'endpoint REST ci-dessus.
+        - lang: "dart"
+          label: "Flutter SDK"
+          source: |
+            import 'package:maisha_pay_flutter/maisha_pay_flutter.dart';
+
+            final pay = MaishaPay(
+              apiKey: 'mp_live_xxxxxxxx',
+              environment: Environment.sandbox,
+            );
+
+            final result = await pay.initiateMobileMoney(
+              amount: 1000000,
+              currency: 'CDF',
+              phone: '+24399XXXXXXX',
+              operator: 'airtel',
+              reference: 'XXXX',
+            );
+        - lang: "php"
+          label: "PHP SDK"
+          source: |
+            use MaishaPay\MaishaPay;
+
+            $pay = new MaishaPay(
+              apiKey: 'mp_live_xxxxxxxx',
+              secretKey: 'ms_live_xxxxxxxx',
+              environment: Environment::SANDBOX,
+            );
+
+            $transaction = $pay->mobileMoney()
+              ->amount(1000000)
+              ->currency('CDF')
+              ->phone('+24399XXXXXXX')
+              ->operator('airtel')
+              ->reference('XXXX')
+              ->execute();
+
+  /collect/v3/store/card:
+    post:
+      operationId: collectCard
+      tags: [Collection]
+      summary: Initier une collecte par carte bancaire
+      description: |
+        Initie un paiement par carte (Visa, Mastercard, American Express) via CyberSource. La
+        réponse initiale contient une `paymentPage` vers laquelle rediriger le client pour saisir
+        ses informations de carte. Le statut final est envoyé en **GET** vers `callbackUrl` (query
+        params), ou peut être vérifié via [Transaction Lookup](#operation/lookupTransaction).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CardCollectionRequest"
+            examples:
+              default:
+                value:
+                  transactionReference: "XXXX"
+                  gatewayMode: "0"
+                  publicApiKey: "MP-SBPK-XXXXX"
+                  secretApiKey: "MP-SBPK-XXXXX"
+                  order:
+                    amount: "1"
+                    currency: "USD"
+                    customerFirstname: "Jacques"
+                    customerLastname: "Mvumbi"
+                    customerAddress: "1 Crystal Palace"
+                    customerCity: "Kinshasa"
+                    customerPhoneNumber: "+24381XXXXXXX"
+                    customerEmailAdress: "jacquesmvumbi@maishapay.online"
+                  paymentChannel:
+                    channel: "CARD"
+                    provider: "MASTERCARD"
+                    callbackUrl: "https://your_domaine.com/mobile_calback"
+      responses:
+        "202":
+          description: Transaction initiée, redirection nécessaire vers `paymentPage`.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CardCollectionResponse"
+              examples:
+                pending:
+                  value:
+                    status_code: 202
+                    transactionId: 1234
+                    originatingTransactionId: "drtl-07"
+                    transactionStatus: "PENDING"
+                    transactionDescription: "Accepted"
+                    paymentPage: "https://marchand.maishapay.online/api/collect/postRedirectionRequest/1234"
+                    updated_at: "03-02-2025 18:17"
+      x-codeSamples:
+        - lang: "bash"
+          label: "cURL"
+          source: |
+            curl --location 'https://marchand.maishapay.online/api/collect/v3/store/card' \
+            --header 'Accept: application/json' \
+            --header 'Content-Type: application/json' \
+            --data-raw '{
+                "transactionReference": "XXXX",
+                "gatewayMode": "0",
+                "publicApiKey": "MP-SBPK-XXXXX",
+                "secretApiKey": "MP-SBPK-XXXXX",
+                "order": {
+                    "amount": "1",
+                    "currency": "USD",
+                    "customerFirstname": "Jacques",
+                    "customerLastname": "Mvumbi",
+                    "customerAddress": "1 Crystal Palace",
+                    "customerCity": "Kinshasa",
+                    "customerPhoneNumber": "+24381XXXXXXX",
+                    "customerEmailAdress": "jacquesmvumbi@maishapay.online"
+                },
+                "paymentChannel": {
+                    "channel": "CARD",
+                    "provider": "MASTERCARD",
+                    "callbackUrl": "https://your_domaine.com/mobile_calback"
+                }
+            }'
+
+  /transaction/rest/v2/check:
+    post:
+      operationId: lookupTransaction
+      tags: [Transactions]
+      summary: Rechercher une transaction (par ID MaishaPay ou référence marchand)
+      description: |
+        Récupère le statut et les détails d'une transaction, qu'il s'agisse d'une collecte
+        (Mobile Money ou carte) ou d'un transfert B2C.
+
+        - Recherche par ID MaishaPay : `POST /transaction/rest/v2/check`
+        - Recherche par référence marchand : `POST /transaction/rest/v2/check?useRef=1`
+
+        La forme de la réponse dépend de `transaction_type` (`C2B | Collect` ou `B2C | Transfert`).
+      parameters:
+        - name: useRef
+          in: query
+          required: false
+          description: Si `1`, interprète `transactionId` comme la référence marchand plutôt que l'ID MaishaPay.
+          schema:
+            type: integer
+            enum: [0, 1]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransactionLookupRequest"
+            examples:
+              parId:
+                summary: Recherche par ID MaishaPay
+                value:
+                  gatewayMode: 1
+                  publicApiKey: "MP-LIVEPK-XXXXX"
+                  secretApiKey: "MP-LIVEPK-XXXXX"
+                  transactionId: "123456"
+              parReference:
+                summary: Recherche par référence marchand
+                value:
+                  gatewayMode: 1
+                  publicApiKey: "MP-LIVEPK-XXXXX"
+                  secretApiKey: "MP-LIVEPK-XXXXX"
+                  transactionId: "XXXX"
+      responses:
+        "200":
+          description: Transaction trouvée.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/CollectLookupResponse"
+                  - $ref: "#/components/schemas/TransferLookupResponse"
+                discriminator:
+                  propertyName: transaction_type
+                  mapping:
+                    "C2B | Collect": "#/components/schemas/CollectLookupResponse"
+                    "B2C | Transfert": "#/components/schemas/TransferLookupResponse"
+              examples:
+                collecte:
+                  summary: Transaction de collecte (carte)
+                  value:
+                    transaction_type: "C2B | Collect"
+                    status_code: 200
+                    transactionStatus: "SUCCESS"
+                    transactionId: 123456
+                    originatingTransactionId: "XXXX"
+                    order:
+                      customerFullName: null
+                      customerPhoneNumber: "976002329"
+                      customerEmailAdress: null
+                      cost:
+                        amount: 1
+                        frais: 0.03
+                        total: 1.03
+                        currency: "USD"
+                    paymentChannel:
+                      channel: "CARD"
+                      provider: "VISA"
+                    walletID: "97XXXXXXX"
+                    created_at: "27-07-2023 12:41"
+                    updated_at: "27-07-2023 12:43"
+                transfert:
+                  summary: Transaction de transfert B2C
+                  value:
+                    transaction_type: "B2C | Transfert"
+                    status_code: 400
+                    transactionStatus: "FAILED"
+                    transactionId: 12345
+                    originatingTransactionId: "XXXXX"
+                    recipient:
+                      customerFullName: "Jacques Mvumbi"
+                      customerEmailAdress: "jacquesmvumbi@maishapay.online" 
+                      walletID: "+24399XXXXXXX"
+                    provider:
+                      libelle: "AIRTEL"
+                      picture: "service-logos/airtelmoney.png"
+                    cost:
+                      amount: 20000
+                      frais: 0
+                      total: 20000
+                      currency: "CDF"
+                    motif: "Transfert vers Momo"
+                    date: "17-01-2025 16:26"
+      x-codeSamples:
+        - lang: "bash"
+          label: "cURL — via référence marchand"
+          source: |
+            curl --location 'https://marchand.maishapay.online/api/transaction/rest/v2/check?useRef=1' \
+            --header 'Accept: application/json' \
+            --header 'Content-Type: application/json' \
+            --data '{
+                "gatewayMode": 1,
+                "publicApiKey": "MP-LIVEPK-XXXXX",
+                "secretApiKey": "MP-LIVEPK-XXXXX",
+                "transactionId": "XXXX"
+            }'
+
+  /b2c/store/transfert/mobilemoney:
+    post:
+      operationId: b2cTransferMobileMoney
+      tags: [Transferts B2C]
+      summary: Effectuer un transfert vers un compte Mobile Money
+      description: |
+        Transfère des fonds directement vers le portefeuille Mobile Money d'un bénéficiaire
+        (remboursement, salaire, récompense...). Contrairement à la collecte, la réponse est
+        **synchrone** : le statut final (`SUCCESS` ou `FAILED`) est renvoyé directement, en plus
+        d'une notification POST redondante vers `callbackUrl`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/B2CTransferRequest"
+            examples:
+              default:
+                value:
+                  transactionReference: "XXXX"
+                  gatewayMode: "1"
+                  publicApiKey: "MP-LIVEPK-XXXXX"
+                  secretApiKey: "MP-LIVEPK-XXXXX"
+                  order:
+                    motif: "Transfert vers Momo"
+                    amount: "20000"
+                    currency: "CDF"
+                    customerFullName: "Jacques Mvumbi"
+                    customerEmailAdress: "jacquesmvumbi@maishapay.online"
+                  paymentChannel:
+                    provider: "AIRTEL"
+                    walletID: "+24399XXXXXXX"
+                    callbackUrl: "https://your_domaine.com/your_calback"
+      responses:
+        "200":
+          description: Transfert traité (succès ou échec — voir `transactionStatus`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransferLookupResponse"
+              examples:
+                succes:
+                  value:
+                    status_code: 200
+                    transactionStatus: "SUCCESS"
+                    transactionId: 1234
+                    originatingTransactionId: "XXXX"
+                    recipient:
+                      customerFullName: "Jacques Mvumbi"
+                      customerEmailAdress: "jacquesmvumbi@maishapay.online"
+                      walletID: "+24381XXXXXXX"
+                    provider:
+                      libelle: "MPESA"
+                      picture: "service-logos/mpesa.png"
+                    cost:
+                      amount: 200
+                      frais: 0
+                      total: 200
+                      currency: "CDF"
+                    motif: "Transfert vers Momo"
+                    date: "17-01-2025 15:29"
+                echec:
+                  value:
+                    status_code: 400
+                    transactionStatus: "FAILED"
+                    transactionId: 12345
+                    originatingTransactionId: "XXXXX"
+                    recipient:
+                      customerFullName: "Jacques Mvumbi"
+                      customerEmailAdress: "jacquesmvumbi@maishapay.online"
+                      walletID: "+24399XXXXXXX"
+                    provider:
+                      libelle: "AIRTEL"
+                      picture: "service-logos/airtelmoney.png"
+                    cost:
+                      amount: 20000
+                      frais: 0
+                      total: 20000
+                      currency: "CDF"
+                    motif: "Transfert vers Momo"
+                    date: "17-01-2025 15:57"
+      x-codeSamples:
+        - lang: "bash"
+          label: "cURL"
+          source: |
+            curl --location 'https://marchand.maishapay.online/api/b2c/store/transfert/mobilemoney' \
+            --data '{
+                "transactionReference": "XXXX",
+                "gatewayMode": "1",
+                "publicApiKey": "MP-LIVEPK-XXXXX",
+                "secretApiKey": "MP-LIVEPK-XXXXX",
+                "order": {
+                    "motif": "Transfert vers Momo",
+                    "amount": "200",
+                    "currency": "CDF",
+                    "customerFullName": "Jacques Mvumbi",
+                    "customerEmailAdress": "jacquesmvumbi@maishapay.online"
+                },
+                "paymentChannel": {
+                    "provider": "MPESA",
+                    "walletID": "+24381XXXXXXX",
+                    "callbackUrl": "https://your_domaine.com/your_calback"
+                }
+            }'
+        - lang: "dart"
+          label: "Flutter SDK"
+          source: |
+            final result = await pay.initiateB2CTransfer(
+              amount: 20000,
+              currency: 'CDF',
+              phone: '+24381XXXXXXX',
+              operator: 'mpesa',
+              reference: 'XXXX',
+              motif: 'Transfert vers Momo',
+            );
+
+  /wallet/balance/report:
+    post:
+      operationId: getBalanceReport
+      tags: [Solde]
+      summary: Consulter le solde disponible pour un service
+      description: |
+        Retourne le solde disponible pour un service (`Collect`, `Transfert`, `Airtime`, `PayTv`)
+        et une devise donnés.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BalanceReportRequest"
+            examples:
+              default:
+                value:
+                  gatewayMode: 1
+                  publicApiKey: "MP-LIVEPK-kK6yCY09V1jxxxxxxxxxx"
+                  secretApiKey: "MP-LIVEPK-TpJWW05QUGxxxxxxxxxx"
+                  wallet: "Transfert"
+                  currency: "CDF"
+      responses:
+        "200":
+          description: Solde récupéré avec succès.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BalanceReportResponse"
+              examples:
+                default:
+                  value:
+                    merchant: "EXCOTECH"
+                    gatewayMode: "LIVE"
+                    wallet: "Transfert"
+                    solde: 1154100
+                    currency: "CDF"
+      x-codeSamples:
+        - lang: "bash"
+          label: "cURL"
+          source: |
+            curl --location 'https://marchand.maishapay.online/api/wallet/balance/report' \
+            --data '{
+                "gatewayMode": "1",
+                "publicApiKey": "MP-LIVEPK-kK6yCY09V1jxxxxxxxxxx",
+                "secretApiKey": "MP-LIVEPK-TpJWW05QUGxxxxxxxxxx",
+                "wallet": "Transfert",
+                "currency": "CDF"
+            }'
+
+  /paytv/operators:
+    get:
+      operationId: listTvOperators
+      tags: [PayTV]
+      summary: Lister les opérateurs TV disponibles
+      description: |
+        Retourne la liste des opérateurs de télévision payante supportés (actuellement en RDC
+        uniquement) : Canal+ RDC, Easy TV, StarTimes RDC, DSTV.
+      responses:
+        "200":
+          description: Liste des opérateurs.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status_code:
+                    type: integer
+                    example: 200
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/TvOperator"
+
+  /paytv/operators/{id}/show:
+    get:
+      operationId: getTvOperator
+      tags: [PayTV]
+      summary: Détails d'un opérateur TV
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Identifiant de l'opérateur TV.
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Détails de l'opérateur.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status_code:
+                    type: integer
+                    example: 200
+                  data:
+                    $ref: "#/components/schemas/TvOperator"
+
+  /paytv/operators/{operatorID}/bouquets:
+    get:
+      operationId: listTvBouquets
+      tags: [PayTV]
+      summary: Lister les bouquets d'un opérateur TV
+      parameters:
+        - name: operatorID
+          in: path
+          required: true
+          description: Identifiant de l'opérateur TV.
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Liste des bouquets disponibles pour cet opérateur.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status_code:
+                    type: integer
+                    example: 200
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/TvBouquet"
+
+  /paytv/operators/{operatorID}/bouquets/{bouquetID}:
+    get:
+      operationId: getTvBouquet
+      tags: [PayTV]
+      summary: Détails d'un bouquet TV
+      description: |
+        ⚠️ **À confirmer** : la documentation source fait référence à cet endpoint sous deux
+        formes différentes (`/paytv/bouquets/{bouquetID}/show` et
+        `/paytv/operators/{operatorID}/bouquets/{bouquetID}`). Vérifiez l'URL exacte en sandbox
+        avant publication.
+      parameters:
+        - name: operatorID
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: bouquetID
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Détails du bouquet, avec périodes de souscription et prix par devise.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status_code:
+                    type: integer
+                    example: 200
+                  data:
+                    $ref: "#/components/schemas/TvBouquetDetail"
+
+  /paytv/store:
+    post:
+      operationId: subscribeTv
+      tags: [PayTV]
+      summary: Souscrire ou réabonner un client à un bouquet TV
+      description: |
+        ⚠️ **Réponse non confirmée** — la documentation source ne montre pas d'exemple de réponse
+        pour cet endpoint. À valider en sandbox avant publication finale.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TvSubscriptionRequest"
+            examples:
+              default:
+                value:
+                  transactionReference: "524HYG"
+                  gatewayMode: "1"
+                  publicApiKey: "MP-LIVEPK-xxxxxxxxxx"
+                  secretApiKey: "MP-LIVEPK-xxxxxxxxxx"
+                  operation: "reabonnement"
+                  operator: "1"
+                  bouquet: "2"
+                  periode: "3"
+                  currency: "USD"
+                  numCard: "1236547895684125"
+      responses:
+        "200":
+          description: |
+            ⚠️ Structure de réponse à confirmer. Vraisemblablement alignée sur les autres modules
+            (`status_code`, `transactionStatus`).
+          content:
+            application/json:
+              schema:
+                type: object
+                description: À confirmer.
+
+  /airtime/operators/country/currency:
+    post:
+      operationId: listAirtimeOperators
+      tags: [Airtime]
+      summary: Lister les opérateurs de recharge pour un pays et une devise
+      description: |
+        ⚠️ **Réponse non confirmée** — la documentation source ne montre pas d'exemple de corps de
+        réponse (capture Postman sans exécution réelle). À tester en sandbox pour documenter la
+        structure exacte avant publication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [publicApiKey, secretApiKey, currency, isoCode]
+              properties:
+                publicApiKey:
+                  type: string
+                  example: "MP-LIVEPK-xxx"
+                secretApiKey:
+                  type: string
+                  example: "MP-LIVEPK-xxx"
+                currency:
+                  type: string
+                  enum: [CDF, USD]
+                  example: "USD"
+                isoCode:
+                  type: string
+                  description: Code ISO à 2 lettres du pays (ex. `CD` pour la RDC).
+                  example: "CD"
+      responses:
+        "200":
+          description: ⚠️ À confirmer — structure non documentée dans la source.
+          content:
+            application/json:
+              schema:
+                type: object
+                description: À confirmer.
+
+  /airtime/operators/auto-detect/phone/country/currency:
+    post:
+      operationId: detectAirtimeOperator
+      tags: [Airtime]
+      summary: Détecter automatiquement l'opérateur à partir d'un numéro de téléphone
+      description: |
+        ⚠️ **Réponse non confirmée** — voir la note sur l'endpoint précédent.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [publicApiKey, secretApiKey, currency, isoCode, phone]
+              properties:
+                publicApiKey:
+                  type: string
+                secretApiKey:
+                  type: string
+                currency:
+                  type: string
+                  enum: [CDF, USD]
+                isoCode:
+                  type: string
+                  example: "CD"
+                phone:
+                  type: string
+                  example: "+243854225000"
+      responses:
+        "200":
+          description: ⚠️ À confirmer — structure non documentée dans la source.
+          content:
+            application/json:
+              schema:
+                type: object
+                description: À confirmer.
+
+  /airtime/store:
+    post:
+      operationId: buyAirtime
+      tags: [Airtime]
+      summary: Acheter du crédit téléphonique (airtime)
+      description: |
+        ⚠️ **Réponse non confirmée** — voir la note sur les deux endpoints précédents.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [transactionReference, gatewayMode, publicApiKey, secretApiKey, currency, amount, operatorId, recipient]
+              properties:
+                transactionReference:
+                  type: string
+                  example: "589"
+                gatewayMode:
+                  type: string
+                  enum: ["0", "1"]
+                publicApiKey:
+                  type: string
+                secretApiKey:
+                  type: string
+                currency:
+                  type: string
+                  enum: [CDF, USD]
+                motif:
+                  type: string
+                  example: "achat crédit"
+                amount:
+                  type: string
+                  example: "3000"
+                operatorId:
+                  type: string
+                  example: "707"
+                recipient:
+                  type: object
+                  properties:
+                    countryCode:
+                      type: string
+                      example: "CD"
+                    phone:
+                      type: string
+                      example: "+243814225000"
+      responses:
+        "200":
+          description: ⚠️ À confirmer — structure non documentée dans la source.
+          content:
+            application/json:
+              schema:
+                type: object
+                description: À confirmer.
+
+components:
+  schemas:
+    Credentials:
+      type: object
+      required: [gatewayMode, publicApiKey, secretApiKey]
+      properties:
+        gatewayMode:
+          type: string
+          enum: ["0", "1"]
+          description: "0 = Sandbox, 1 = Production (Live)."
+        publicApiKey:
+          type: string
+          description: Clé API publique fournie par MaishaPay.
+        secretApiKey:
+          type: string
+          description: Clé API secrète fournie par MaishaPay.
+
+    Cost:
+      type: object
+      properties:
+        amount:
+          type: number
+        frais:
+          type: number
+        total:
+          type: number
+        currency:
+          type: string
+
+    ProviderInfo:
+      type: object
+      properties:
+        libelle:
+          type: string
+          example: "AIRTEL"
+        picture:
+          type: string
+          example: "service-logos/airtelmoney.png"
+
+    MobileMoneyCollectionRequest:
+      allOf:
+        - $ref: "#/components/schemas/Credentials"
+        - type: object
+          required: [transactionReference, order, paymentChannel]
+          properties:
+            transactionReference:
+              type: string
+              description: Référence unique fournie par le marchand.
+            order:
+              type: object
+              required: [amount, currency]
+              properties:
+                amount:
+                  type: string
+                  description: Minimum 100 pour les devises locales, 0.5 pour l'USD.
+                currency:
+                  type: string
+                  example: "CDF"
+                customerFullName:
+                  type: string
+                customerEmailAdress:
+                  type: string
+                  format: email
+            paymentChannel:
+              type: object
+              required: [channel, provider, walletID, callbackUrl]
+              properties:
+                channel:
+                  type: string
+                  enum: [MOBILEMONEY]
+                provider:
+                  type: string
+                  description: Opérateur Mobile Money (ex. AIRTEL, ORANGE, MTN, MPESA).
+                  example: "AIRTEL"
+                walletID:
+                  type: string
+                  description: Numéro de téléphone au format international.
+                  example: "+24399XXXXXXX"
+                callbackUrl:
+                  type: string
+                  format: uri
+                  description: URL recevant la notification finale (requête POST).
+
+    MobileMoneyCollectionResponse:
+      type: object
+      properties:
+        status_code:
+          type: integer
+        transactionStatus:
+          type: string
+          enum: [PENDING, SUCCESS, FAILED]
+        transactionId:
+          type: integer
+        originatingTransactionId:
+          type: string
+        order:
+          type: object
+          properties:
+            customerFullName:
+              type: string
+            customerEmailAdress:
+              type: string
+            cost:
+              $ref: "#/components/schemas/Cost"
+        paymentChannel:
+          type: object
+          properties:
+            channel:
+              type: string
+            provider:
+              $ref: "#/components/schemas/ProviderInfo"
+            walletID:
+              type: string
+        created_at:
+          type: string
+        updated_at:
+          type: string
+
+    CardCollectionRequest:
+      allOf:
+        - $ref: "#/components/schemas/Credentials"
+        - type: object
+          required: [transactionReference, order, paymentChannel]
+          properties:
+            transactionReference:
+              type: string
+            order:
+              type: object
+              required: [amount, currency, customerPhoneNumber, customerEmailAdress]
+              properties:
+                amount:
+                  type: string
+                currency:
+                  type: string
+                  description: "⚠️ Incohérence source : tableau des paramètres indique USD/EURO, exemple cURL indique USD/CDF. À confirmer."
+                  example: "USD"
+                customerFirstname:
+                  type: string
+                customerLastname:
+                  type: string
+                customerAddress:
+                  type: string
+                customerCity:
+                  type: string
+                customerPhoneNumber:
+                  type: string
+                customerEmailAdress:
+                  type: string
+                  format: email
+            paymentChannel:
+              type: object
+              required: [channel, provider, callbackUrl]
+              properties:
+                channel:
+                  type: string
+                  enum: [CARD]
+                provider:
+                  type: string
+                  enum: [VISA, MASTERCARD, "AMERICAN EXPRESS"]
+                callbackUrl:
+                  type: string
+                  format: uri
+                  description: URL recevant la notification finale (requête GET, query params).
+
+    CardCollectionResponse:
+      type: object
+      properties:
+        status_code:
+          type: integer
+        transactionId:
+          type: integer
+        originatingTransactionId:
+          type: string
+        transactionStatus:
+          type: string
+          enum: [PENDING, SUCCESS, FAILED]
+        transactionDescription:
+          type: string
+        paymentPage:
+          type: string
+          format: uri
+          description: URL de redirection vers CyberSource pour finaliser le paiement.
+        updated_at:
+          type: string
+
+    TransactionLookupRequest:
+      allOf:
+        - $ref: "#/components/schemas/Credentials"
+        - type: object
+          required: [transactionId]
+          properties:
+            transactionId:
+              type: string
+              description: ID MaishaPay, ou référence marchand si `useRef=1`.
+
+    CollectLookupResponse:
+      type: object
+      properties:
+        transaction_type:
+          type: string
+          enum: ["C2B | Collect"]
+        status_code:
+          type: integer
+        transactionStatus:
+          type: string
+        transactionId:
+          type: integer
+        originatingTransactionId:
+          type: string
+        order:
+          type: object
+          properties:
+            customerFullName:
+              type: string
+              nullable: true
+            customerPhoneNumber:
+              type: string
+            customerEmailAdress:
+              type: string
+              nullable: true
+            cost:
+              $ref: "#/components/schemas/Cost"
+        paymentChannel:
+          type: object
+          properties:
+            channel:
+              type: string
+            provider:
+              type: string
+        walletID:
+          type: string
+        created_at:
+          type: string
+        updated_at:
+          type: string
+
+    TransferLookupResponse:
+      type: object
+      properties:
+        transaction_type:
+          type: string
+          enum: ["B2C | Transfert"]
+        status_code:
+          type: integer
+        transactionStatus:
+          type: string
+          enum: [SUCCESS, FAILED, PENDING]
+        transactionId:
+          type: integer
+        originatingTransactionId:
+          type: string
+        recipient:
+          type: object
+          properties:
+            customerFullName:
+              type: string
+            customerEmailAdress:
+              type: string
+              nullable: true
+            walletID:
+              type: string
+        provider:
+          $ref: "#/components/schemas/ProviderInfo"
+        cost:
+          $ref: "#/components/schemas/Cost"
+        motif:
+          type: string
+        date:
+          type: string
+
+    B2CTransferRequest:
+      allOf:
+        - $ref: "#/components/schemas/Credentials"
+        - type: object
+          required: [transactionReference, order, paymentChannel]
+          properties:
+            transactionReference:
+              type: string
+            order:
+              type: object
+              required: [amount, currency]
+              properties:
+                motif:
+                  type: string
+                  description: Raison du transfert (optionnel).
+                amount:
+                  type: string
+                  description: Doit être supérieur à 100 pour les devises locales.
+                currency:
+                  type: string
+                customerFullName:
+                  type: string
+                customerEmailAdress:
+                  type: string
+            paymentChannel:
+              type: object
+              required: [provider, walletID, callbackUrl]
+              properties:
+                provider:
+                  type: string
+                  example: "AIRTEL"
+                walletID:
+                  type: string
+                  description: Numéro de téléphone du bénéficiaire (format international).
+                callbackUrl:
+                  type: string
+                  format: uri
+
+    BalanceReportRequest:
+      allOf:
+        - $ref: "#/components/schemas/Credentials"
+        - type: object
+          required: [wallet, currency]
+          properties:
+            wallet:
+              type: string
+              enum: [Collect, Transfert, Airtime, PayTv]
+            currency:
+              type: string
+              example: "CDF"
+
+    BalanceReportResponse:
+      type: object
+      properties:
+        merchant:
+          type: string
+        gatewayMode:
+          type: string
+          enum: [LIVE, SANDBOX]
+        wallet:
+          type: string
+        solde:
+          type: number
+        currency:
+          type: string
+
+    Country:
+      type: object
+      properties:
+        id:
+          type: integer
+        code:
+          type: integer
+        alpha2:
+          type: string
+        alpha3:
+          type: string
+        nom_en_gb:
+          type: string
+        nom_fr_fr:
+          type: string
+        continent:
+          type: string
+        currencyCode:
+          type: string
+        currencyName:
+          type: string
+        currencySymbol:
+          type: string
+        flag:
+          type: string
+          format: uri
+        callingCodes:
+          type: string
+
+    Currency:
+      type: object
+      properties:
+        id:
+          type: integer
+        libelle:
+          type: string
+        code:
+          type: string
+        symbole:
+          type: string
+
+    TvOperator:
+      type: object
+      properties:
+        id:
+          type: integer
+        libelle:
+          type: string
+          example: "Canal+ RDC"
+        logo:
+          type: string
+        status:
+          type: string
+          enum: [enabled, disabled]
+        pay_id:
+          type: integer
+        devises:
+          type: array
+          items:
+            $ref: "#/components/schemas/Currency"
+        pays:
+          $ref: "#/components/schemas/Country"
+
+    TvBouquet:
+      type: object
+      properties:
+        id:
+          type: integer
+        libelle:
+          type: string
+          example: "ACCESS"
+        tv_operator_id:
+          type: integer
+
+    TvBouquetDetail:
+      allOf:
+        - $ref: "#/components/schemas/TvBouquet"
+        - type: object
+          properties:
+            tv_periodes:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  libelle:
+                    type: string
+                    example: "Mois"
+                  pivot:
+                    type: object
+                    properties:
+                      bouquet_id:
+                        type: integer
+                      tv_periode_id:
+                        type: integer
+                      prix:
+                        type: number
+                      devise_id:
+                        type: integer
+            tv_operator:
+              $ref: "#/components/schemas/TvOperator"
+
+    TvSubscriptionRequest:
+      allOf:
+        - $ref: "#/components/schemas/Credentials"
+        - type: object
+          required: [transactionReference, operation, operator, bouquet, periode, currency, numCard]
+          properties:
+            transactionReference:
+              type: string
+            operation:
+              type: string
+              enum: [abonnement, reabonnement]
+            operator:
+              type: string
+              description: Identifiant de l'opérateur TV.
+            bouquet:
+              type: string
+              description: Identifiant du bouquet.
+            periode:
+              type: string
+              description: Identifiant de la période d'abonnement.
+            currency:
+              type: string
+              enum: [CDF, USD]
+            numCard:
+              type: string
+              description: Numéro de carte de l'opérateur TV.
+
+security: []

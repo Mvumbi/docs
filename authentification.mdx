@@ -1,0 +1,91 @@
+---
+title: "Authentification"
+description: "Clés API, environnements Sandbox et Live"
+---
+
+L'API MaishaPay utilise un système d'authentification par clés API, transmises **dans le corps de
+chaque requête** (et non dans les en-têtes HTTP, contrairement à de nombreuses API REST).
+
+<Warning>
+  Cette convention est spécifique à MaishaPay : n'essayez pas d'envoyer vos clés via un en-tête
+  `Authorization` — elles ne seront pas reconnues.
+</Warning>
+
+## Les deux clés requises
+
+Chaque requête authentifiée nécessite deux champs :
+
+| Champ | Description |
+|---|---|
+| `publicApiKey` | Clé API publique fournie par MaishaPay. |
+| `secretApiKey` | Clé API secrète fournie par MaishaPay. À garder strictement confidentielle. |
+
+Récupérez ces deux clés depuis votre
+[dashboard marchand MaishaPay](https://marchand.maishapay.online).
+
+```json
+{
+  "publicApiKey": "MP-LIVEPK-kK6yCY09V1jxxxxxxxxxx",
+  "secretApiKey": "MP-LIVEPK-TpJWW05QUGxxxxxxxxxx"
+}
+```
+
+## Environnements : Sandbox vs Live
+
+Le champ `gatewayMode` détermine l'environnement d'exécution de la requête :
+
+| Valeur | Environnement | Usage |
+|---|---|---|
+| `"0"` | **Sandbox** | Tests, développement, intégration continue. Aucune transaction réelle. |
+| `"1"` | **Live** (production) | Transactions réelles avec de l'argent réel. |
+
+<Tip>
+  Le préfixe de vos clés API correspond généralement à l'environnement : `MP-SBPK-...` pour
+  Sandbox, `MP-LIVEPK-...` pour Live. Utilisez toujours la paire de clés correspondant au
+  `gatewayMode` choisi.
+</Tip>
+
+## Exemple de requête authentifiée
+
+```json
+{
+  "transactionReference": "ORDER-001",
+  "gatewayMode": "1",
+  "publicApiKey": "MP-LIVEPK-kK6yCY09V1jxxxxxxxxxx",
+  "secretApiKey": "MP-LIVEPK-TpJWW05QUGxxxxxxxxxx",
+  "order": { ... },
+  "paymentChannel": { ... }
+}
+```
+
+## Bonnes pratiques de sécurité
+
+<AccordionGroup>
+  <Accordion title="Ne jamais exposer secretApiKey côté client">
+    N'incluez jamais `secretApiKey` dans du code exécuté côté navigateur ou dans une application
+    mobile distribuée publiquement. Les appels utilisant `secretApiKey` doivent être effectués
+    depuis votre backend.
+  </Accordion>
+  <Accordion title="Utiliser des variables d'environnement">
+    Stockez vos clés dans des variables d'environnement ou un gestionnaire de secrets, jamais en
+    dur dans votre code source ni commitées dans Git.
+  </Accordion>
+  <Accordion title="Sécuriser vos callbackUrl">
+    Validez les données reçues sur vos endpoints de callback pour éviter toute manipulation
+    frauduleuse des notifications. Voir
+    [Callbacks et notifications](/concepts/callbacks-notifications).
+  </Accordion>
+  <Accordion title="Utiliser transactionReference pour l'idempotence">
+    Générez une `transactionReference` unique par tentative de transaction pour éviter les
+    doublons et faciliter le rapprochement avec vos propres systèmes.
+  </Accordion>
+</AccordionGroup>
+
+## Authentification dans les SDKs
+
+Les SDK encapsulent ces deux clés dans leur configuration client. Le format varie légèrement selon
+le SDK — voir la page d'installation de chaque SDK pour le détail exact :
+
+- [SDK Flutter](/sdks/flutter/installation)
+- [SDK JavaScript](/sdks/js/installation)
+- [SDK PHP](/sdks/php/installation)
