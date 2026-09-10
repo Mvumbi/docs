@@ -255,7 +255,7 @@ paths:
     post:
       operationId: lookupTransaction
       tags: [Transactions]
-      summary: Rechercher une transaction (par ID MaishaPay ou référence marchand)
+      summary: Statut d'une transaction
       description: |
         Récupère le statut et les détails d'une transaction, qu'il s'agisse d'une collecte
         (Mobile Money ou carte) ou d'un transfert B2C.
@@ -371,7 +371,7 @@ paths:
     post:
       operationId: b2cTransferMobileMoney
       tags: [Transferts B2C]
-      summary: Effectuer un transfert vers un compte Mobile Money
+      summary: Paiement vers Mobile Money
       description: |
         Transfère des fonds directement vers le portefeuille Mobile Money d'un bénéficiaire
         (remboursement, salaire, récompense...). Contrairement à la collecte, la réponse est
@@ -537,7 +537,7 @@ paths:
     get:
       operationId: listTvOperators
       tags: [PayTV]
-      summary: Lister les opérateurs TV disponibles
+      summary: Lister les opérateurs  disponibles
       description: |
         Retourne la liste des opérateurs de télévision payante supportés (actuellement en RDC
         uniquement) : Canal+ RDC, Easy TV, StarTimes RDC, DSTV.
@@ -561,7 +561,7 @@ paths:
     get:
       operationId: getTvOperator
       tags: [PayTV]
-      summary: Détails d'un opérateur TV
+      summary: Détails d'un opérateur 
       parameters:
         - name: id
           in: path
@@ -587,7 +587,7 @@ paths:
     get:
       operationId: listTvBouquets
       tags: [PayTV]
-      summary: Lister les bouquets d'un opérateur TV
+      summary: Lister les bouquets d'un opérateur 
       parameters:
         - name: operatorID
           in: path
@@ -615,7 +615,7 @@ paths:
     get:
       operationId: getTvBouquet
       tags: [PayTV]
-      summary: Détails d'un bouquet TV
+      summary: Détails d'un bouquet 
       description: |
         ⚠️ **À confirmer** : la documentation source fait référence à cet endpoint sous deux
         formes différentes (`/paytv/bouquets/{bouquetID}/show` et
@@ -650,7 +650,7 @@ paths:
     post:
       operationId: subscribeTv
       tags: [PayTV]
-      summary: Souscrire ou réabonner un client à un bouquet TV
+      summary: Souscrire ou réabonner un client à un bouquet 
       description: |
         ⚠️ **Réponse non confirmée** — la documentation source ne montre pas d'exemple de réponse
         pour cet endpoint. À valider en sandbox avant publication finale.
@@ -688,7 +688,7 @@ paths:
     post:
       operationId: listAirtimeOperators
       tags: [Airtime]
-      summary: Lister les opérateurs de recharge pour un pays et une devise
+      summary: Opérateurs de recharge par pays et devise
       description: |
         ⚠️ **Réponse non confirmée** — la documentation source ne montre pas d'exemple de corps de
         réponse (capture Postman sans exécution réelle). À tester en sandbox pour documenter la
@@ -728,7 +728,7 @@ paths:
     post:
       operationId: detectAirtimeOperator
       tags: [Airtime]
-      summary: Détecter automatiquement l'opérateur à partir d'un numéro de téléphone
+      summary: Détecter l'opérateur par numéro
       description: |
         ⚠️ **Réponse non confirmée** — voir la note sur l'endpoint précédent.
       requestBody:
@@ -765,7 +765,7 @@ paths:
     post:
       operationId: buyAirtime
       tags: [Airtime]
-      summary: Acheter du crédit téléphonique (airtime)
+      summary: Acheter du crédit téléphonique
       description: |
         ⚠️ **Réponse non confirmée** — voir la note sur les deux endpoints précédents.
       requestBody:
